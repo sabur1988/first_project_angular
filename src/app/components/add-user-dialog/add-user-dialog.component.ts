@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { UsersService } from '../../servise/users.service';
 import { User } from '../../types/user.models';
+import {LocalStorageService} from '../../servise/local-storage.service';
 
 
 @Component({
@@ -25,6 +26,8 @@ import { User } from '../../types/user.models';
 export class AddUserDialogComponent {
   //внедряем сервисы через inject
   private usersService = inject(UsersService);
+
+  private localStorageServise = inject(LocalStorageService)
 
   //создаем свойство, в котором сохраняется инстанс FormBuilder
   //служба Angular Reactive Forms, упрощает создание и управление формами
@@ -52,18 +55,40 @@ export class AddUserDialogComponent {
       website: [this.data?.website],
     });
   }
+
+  
+  // Метод для получения следующего ID
+  // getNextUserId(): number {
+  //   // Проверяем, есть ли уже сохранённый ID в localStorage
+  //   const currentId = localStorage.getItem('nextUserId');
+  
+  //   let newId = 1;
+  
+  //   if (currentId) {
+  //     newId = parseInt(currentId, 100) + 10; // Увеличиваем ID на 1
+  //   }
+  
+  //   // Сохраняем обновлённый ID в localStorage для следующего вызова
+  //     localStorage.setItem('nextUserId', newId.toString());
+
+  //     return newId;
+  // }
   //метод сохранения Юзеров
   saveUser(): void {
     //проверяем, является ли форма допустимой (валидной)
     if (this.form.valid) {
       const newUser = this.form.value;//получаем значения, введенные в форму
-      newUser.id = Math.round(Math.random() * 100)// генерируем id
-
+      // newUser.id = this.getNextUserId();// генерируем id
+      newUser.id = Math.round(Math.random() * 100 + 1)// генерируем id
+      this.localStorageServise.addItem('users', newUser);
+      //this.
       //вызывает метод close() у dialogRef
       //и передает данные нового пользователя. 
       //Эти данные будут возвращены из метода afterClosed() в родительский компонент, 
       //который открыл диалог.
       this.dialogRef.close(newUser);
+
+
     }
   }
 

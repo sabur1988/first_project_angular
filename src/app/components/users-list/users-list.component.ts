@@ -10,7 +10,7 @@ import { HeaderComponent } from '../header/header.component';
 import { FooterComponent } from '../footer/footer.component';
 import { User } from 'src/app/types/user.models';
 
-import { LocalStargeService } from '../../servise/local-starge.service';
+import { LocalStorageService } from '../../servise/local-storage.service';
 
 @Component({
   selector: 'app-users-list',
@@ -33,7 +33,7 @@ export class UsersListComponent implements OnInit {
   private readonly usersService = inject(UsersService)
   private readonly usersApiService = inject(UsersApiService)
 
-  private LocalStargeService = inject(LocalStargeService)
+  private LocalStorageService = inject(LocalStorageService)
 
   //инъекции зависимости MatDialog через inject в класс
   private dialog = inject(MatDialog);
@@ -45,29 +45,33 @@ export class UsersListComponent implements OnInit {
   // user!: User;
   // data!: User;
 
-  // Получаем пользователей с сервера и сохраняем их в сервисе UsersService
+  //Получаем пользователей с сервера и сохраняем их в сервисе UsersService
   loadUsers() {
     //вызываем функ getUsers() из запроса АПИ в сервисе usersApiService
     this.usersApiService.getUsers()
-
     .subscribe(// подписывается на Observable 
       //функция обратного вызова, которая выполняется при получении данных
-      (users) => this.usersService.users = users
+        (users) => this.usersService.users = users
     )
   }
 
+  //ngOnInit() - это метод, который используется для инициализации логики компонента 
+  //после его создания и установки всех входных данных
   ngOnInit(): void {
 
-    const isUsers = this.LocalStargeService.getItem('users');
+    const isUsers = this.LocalStorageService.getItem('users');
 
     if(isUsers && isUsers.length > 0) {
       this.usersService.setUsers(isUsers)
+   
+      
     } else {
       this.usersApiService.getUsers().subscribe(
         {
           next: (response: User[]) => {
             this.usersService.setUsers(response);
-            this.LocalStargeService.setItem('users', this.usersService.users);
+            
+            this.LocalStorageService.setItem('users', this.usersService.users);
           },
           error: (error) => {
             console.error('ERROR', error);
@@ -78,8 +82,13 @@ export class UsersListComponent implements OnInit {
   }
 
   onDeleteUser(id: number): void {
+    //удаление из сервиса UsersService
     this.usersService.deleteUser(id);
+    //удаление из LocalStorage
+    this.LocalStorageService.removeItem('users', id)
   }
+
+
   //метод добавления Юзера при помощь модального окна
   openAddUserDialog(): void {
     //переменная которая сохраняет ссылку на Модальное окно
@@ -92,6 +101,7 @@ export class UsersListComponent implements OnInit {
         //вызывает метод addUser() у UsersService, передавая ему данные нового пользователя. 
         //Это добавляет нового пользователя в список пользователей
         this.usersService.addUser(newUser)
+        
         //подписка на Observable users$
         this.users$.subscribe({})
       }
